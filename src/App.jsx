@@ -10,6 +10,8 @@ import VehicleList from './pages/VehicleList'
 import LoginForm from './components/auth/LoginForm'
 import SignupForm from './components/auth/SignupForm'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import AdminRoute from './components/auth/AdminRoute'
+import AdminDashboard from './pages/AdminDashboard'
 
 // Import user pages
 import UserProfile from './pages/UserProfile'
@@ -21,6 +23,8 @@ import UserBookings from './pages/UserBookings'
 import HiddenGemsList from './pages/HiddenGemsList'
 import VehicleDetail from './pages/VehicleDetail'
 import HiddenGemDetail from './pages/HiddenGemDetail'
+import TourList from './pages/TourList'
+import TourDetail from './pages/TourDetail'
 
 // Error boundary component
 class ErrorBoundary extends React.Component {
@@ -74,6 +78,8 @@ function App() {
                 <Route path="/vehicle/:id" element={<VehicleDetail />} />
                 <Route path="/hidden-gems" element={<HiddenGemsList />} />
                 <Route path="/hidden-gems/:id" element={<HiddenGemDetail />} />
+                <Route path="/tours" element={<TourList />} />
+                <Route path="/tours/:id" element={<TourDetail />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/signup" element={<SignupForm />} />
                 
@@ -97,6 +103,11 @@ function App() {
                   <ProtectedRoute>
                     <UserBookings />
                   </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <AdminRoute>
+                    <AdminDashboard />
+                  </AdminRoute>
                 } />
               </Routes>
             </main>

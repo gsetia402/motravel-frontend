@@ -12,7 +12,8 @@ const ExclamationTriangleIcon = ({ className }) => <span className={className}>â
 
 const UserBookings = () => {
   const { isAuthenticated } = useAuth();
-  const [bookings, setBookings] = useState([]);
+  const [vehicleBookings, setVehicleBookings] = useState([]);
+  const [tourBookings, setTourBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all'); // all, active, completed, cancelled
@@ -28,11 +29,15 @@ const UserBookings = () => {
       setLoading(true);
       setError(null);
       
-      const response = await userAPI.getBookingHistory();
-      setBookings(response.data || []);
+      const [veh, tours] = await Promise.all([
+        userAPI.getBookingHistory(),
+        userAPI.getTourBookings()
+      ]);
+      setVehicleBookings(Array.isArray(veh) ? veh : []);
+      setTourBookings(Array.isArray(tours) ? tours : []);
     } catch (err) {
-      // For demo purposes, we'll show empty state instead of error
-      setBookings([]);
+      setVehicleBookings([]);
+      setTourBookings([]);
       console.error('Error fetching bookings:', err);
     } finally {
       setLoading(false);
@@ -71,7 +76,7 @@ const UserBookings = () => {
     }
   };
 
-  const filteredBookings = bookings.filter(booking => {
+  const filteredVehicle = vehicleBookings.filter(booking => {
     if (filter === 'all') return true;
     if (filter === 'active') return ['CONFIRMED', 'ACTIVE', 'PENDING'].includes(booking.status);
     if (filter === 'completed') return booking.status === 'COMPLETED';
@@ -150,7 +155,7 @@ const UserBookings = () => {
               Try Again
             </button>
           </div>
-        ) : filteredBookings.length === 0 ? (
+        ) : (filteredVehicle.length === 0 && tourBookings.length === 0) ? (
           <div className="text-center py-12">
             <ClockIcon className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-4 text-lg font-medium text-gray-900">
@@ -172,80 +177,141 @@ const UserBookings = () => {
             )}
           </div>
         ) : (
-          <div className="space-y-6">
-            {filteredBookings.map((booking) => (
-              <div key={booking.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    {getStatusIcon(booking.status)}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {booking.vehicle?.make} {booking.vehicle?.model}
-                      </h3>
-                      <p className="text-sm text-gray-600">Booking #{booking.id}</p>
+          <div className="space-y-10">
+            {/* Vehicle Bookings */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">Vehicle Bookings</h2>
+              {filteredVehicle.length === 0 ? (
+                <div className="text-gray-500">No vehicle bookings for selected filter</div>
+              ) : filteredVehicle.map((booking) => (
+                <div key={booking.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      {getStatusIcon(booking.status)}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {booking.vehicle?.make} {booking.vehicle?.model}
+                        </h3>
+                        <p className="text-sm text-gray-600">Booking #{booking.id}</p>
+                      </div>
                     </div>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
+                      {booking.status}
+                    </span>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
-                    {booking.status}
-                  </span>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="flex items-center space-x-2">
-                    <CalendarIcon className="w-4 h-4 text-gray-400" />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="flex items-center space-x-2">
+                      <CalendarIcon className="w-4 h-4 text-gray-400" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Start Date</p>
+                        <p className="text-sm text-gray-600">
+                          {booking.startDate ? new Date(booking.startDate).toLocaleDateString() : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CalendarIcon className="w-4 h-4 text-gray-400" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">End Date</p>
+                        <p className="text-sm text-gray-600">
+                          {booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Start Date</p>
-                      <p className="text-sm text-gray-600">
-                        {booking.startDate ? new Date(booking.startDate).toLocaleDateString() : 'N/A'}
+                      <p className="text-sm font-medium text-gray-900">Total Cost</p>
+                      <p className="text-lg font-bold text-primary-600">
+                        ${booking.totalCost || 'N/A'}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <CalendarIcon className="w-4 h-4 text-gray-400" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">End Date</p>
-                      <p className="text-sm text-gray-600">
-                        {booking.endDate ? new Date(booking.endDate).toLocaleDateString() : 'N/A'}
-                      </p>
+
+                  {booking.notes && (
+                    <div className="mb-4">
+                      <p className="text-sm font-medium text-gray-900 mb-1">Notes</p>
+                      <p className="text-sm text-gray-600">{booking.notes}</p>
                     </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Total Cost</p>
-                    <p className="text-lg font-bold text-primary-600">
-                      ${booking.totalCost || 'N/A'}
+                  )}
+
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-500">
+                      Booked on {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString() : 'N/A'}
                     </p>
+                    <div className="flex space-x-3">
+                      {booking.vehicle && (
+                        <Link
+                          to={`/vehicle/${booking.vehicle.id}`}
+                          className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                        >
+                          View Vehicle
+                        </Link>
+                      )}
+                      {booking.status === 'COMPLETED' && (
+                        <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                          Leave Review
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
+              ))}
+            </div>
 
-                {booking.notes && (
-                  <div className="mb-4">
-                    <p className="text-sm font-medium text-gray-900 mb-1">Notes</p>
-                    <p className="text-sm text-gray-600">{booking.notes}</p>
+            {/* Tour Bookings */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">Tour Bookings</h2>
+              {tourBookings
+                .filter(b => {
+                  if (filter === 'all') return true;
+                  if (filter === 'active') return ['CONFIRMED','PENDING'].includes(b.status);
+                  if (filter === 'completed') return b.status === 'COMPLETED';
+                  if (filter === 'cancelled') return b.status === 'CANCELLED';
+                  return true;
+                })
+                .map((b) => (
+                <div key={b.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      {getStatusIcon(b.status)}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {b.tourPackage?.name || 'Tour'}
+                        </h3>
+                        <p className="text-sm text-gray-600">Booking {b.bookingId}</p>
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(b.status)}`}>
+                      {b.status}
+                    </span>
                   </div>
-                )}
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-500">
-                    Booked on {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString() : 'N/A'}
-                  </p>
-                  <div className="flex space-x-3">
-                    {booking.vehicle && (
-                      <Link
-                        to={`/vehicle/${booking.vehicle.id}`}
-                        className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-                      >
-                        View Vehicle
-                      </Link>
-                    )}
-                    {booking.status === 'COMPLETED' && (
-                      <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                        Leave Review
-                      </button>
-                    )}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="flex items-center space-x-2">
+                      <CalendarIcon className="w-4 h-4 text-gray-400" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Date</p>
+                        <p className="text-sm text-gray-600">
+                          {b.date}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Guests</p>
+                      <p className="text-lg font-bold text-primary-600">
+                        {b.adults + b.children}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Total Price</p>
+                      <p className="text-lg font-bold text-primary-600">
+                        {b.totalPrice}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>

@@ -9,6 +9,7 @@ const LogoutIcon = ({ className }) => <span className={`${className} text-sm`}>�
 
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
+  const isAdmin = !!user?.roles?.includes('ROLE_ADMIN');
   const navigate = useNavigate();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -76,6 +77,22 @@ const Header = () => {
               )}
             </Link>
             <Link 
+              to="/tours" 
+              className={`relative px-6 py-2 font-medium transition-all duration-200 rounded-full ${
+                isActiveTab('/tours') 
+                  ? 'text-blue-600 bg-blue-50' 
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              <span className="flex items-center space-x-2">
+                <span className="text-lg">🧭</span>
+                <span>Tours</span>
+              </span>
+              {isActiveTab('/tours') && (
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></div>
+              )}
+            </Link>
+            <Link 
               to="/hidden-gems" 
               className={`relative px-6 py-2 font-medium transition-all duration-200 rounded-full ${
                 isActiveTab('/hidden-gems') 
@@ -121,6 +138,16 @@ const Header = () => {
                       <p className="text-sm font-medium text-gray-900">{user?.username}</p>
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <span className="mr-3">🛠️</span>
+                        Admin Dashboard
+                      </Link>
+                    )}
                     <Link
                       to="/profile"
                       className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -196,6 +223,16 @@ const Header = () => {
             }`}
           >
             🚗 Vehicles
+          </Link>
+          <Link 
+            to="/tours" 
+            className={`block px-4 py-2 rounded-lg font-medium transition-colors ${
+              isActiveTab('/tours') 
+                ? 'text-blue-600 bg-blue-50' 
+                : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+            }`}
+          >
+            🧭 Tours
           </Link>
           <Link 
             to="/hidden-gems" 

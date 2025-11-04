@@ -120,8 +120,8 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.LOGIN_START });
     
     try {
-      const response = await authAPI.login(credentials);
-      const { token, id, username, email, roles } = response.data;
+      const data = await authAPI.login(credentials);
+      const { token, id, username, email, roles } = data;
       
       const user = { id, username, email, roles };
       

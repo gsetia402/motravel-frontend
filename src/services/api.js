@@ -197,6 +197,51 @@ export const hiddenGemsAPI = {
   }
 }
 
+// Tours API functions
+export const toursAPI = {
+  getAll: async () => {
+    try {
+      const response = await api.get('/tours')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching tours:', error)
+      throw error
+    }
+  },
+
+  getById: async (id) => {
+    try {
+      const response = await api.get(`/tours/${id}`)
+      return response.data
+    } catch (error) {
+      console.error(`Error fetching tour ${id}:`, error)
+      throw error
+    }
+  },
+
+  checkAvailability: async (id, date, guests) => {
+    try {
+      const response = await api.get(`/tours/${id}/availability`, { params: { date, guests } })
+      return response.data
+    } catch (error) {
+      console.error('Error checking tour availability:', error)
+      throw error
+    }
+  },
+
+  book: async (id, { date, adults, children = 0, contactName, contactEmail, contactPhone }) => {
+    try {
+      const response = await api.post(`/tours/${id}/book`, null, {
+        params: { date, adults, children, contactName, contactEmail, contactPhone }
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error booking tour:', error)
+      throw error
+    }
+  }
+}
+
 // User API functions
 export const userAPI = {
   // Hidden Gem bookmarks
@@ -209,8 +254,11 @@ export const userAPI = {
   removeFavoriteVehicle: (vehicleId) => api.delete(`/vehicles/${vehicleId}/favorite`),
   getFavoriteVehicles: () => api.get('/users/favorites/vehicles'),
   
-  // User bookings history
-  getBookingHistory: () => api.get('/users/bookings'),
+  // User bookings history (vehicle bookings)
+  getBookingHistory: () => api.get('/bookings/user').then(r => r.data),
+
+  // User tour bookings
+  getTourBookings: () => api.get('/tours/my-bookings').then(r => r.data),
   
   // User profile
   getProfile: () => api.get('/users/profile'),
@@ -218,3 +266,36 @@ export const userAPI = {
 }
 
 export default api
+
+// Admin APIs
+export const adminToursAPI = {
+  listTours: () => api.get('/admin/tours').then(r => r.data),
+  createTour: (tour) => api.post('/admin/tours', tour).then(r => r.data),
+  updateTour: (id, tour) => api.put(`/admin/tours/${id}`, tour).then(r => r.data),
+  deleteTour: (id) => api.delete(`/admin/tours/${id}`).then(r => r.data)
+}
+
+export const adminTourBookingsAPI = {
+  list: () => api.get('/admin/tour-bookings').then(r => r.data),
+  get: (id) => api.get(`/admin/tour-bookings/${id}`).then(r => r.data),
+  updateStatus: (id, status) => api.patch(`/admin/tour-bookings/${id}/status`, null, { params: { status } }).then(r => r.data),
+  cancel: (id) => api.post(`/admin/tour-bookings/${id}/cancel`).then(r => r.data)
+}
+
+export const adminVehicleAPI = {
+  createVehicle: (vehicle) => api.post('/vehicles', vehicle).then(r => r.data)
+}
+
+export const adminVehicleBookingsAPI = {
+  list: () => api.get('/bookings').then(r => r.data),
+  cancel: (id) => api.post(`/bookings/${id}/cancel`).then(r => r.data),
+  updateStatus: (id, status) => api.patch(`/bookings/${id}/status`, null, { params: { status } }).then(r => r.data)
+}
+
+export const adminHiddenGemsAPI = {
+  list: (params = {}) => api.get('/admin/hidden-gems', { params }).then(r => r.data),
+  get: (id) => api.get(`/admin/hidden-gems/${id}`).then(r => r.data),
+  create: (gem) => api.post('/admin/hidden-gems', gem).then(r => r.data),
+  update: (id, gem) => api.put(`/admin/hidden-gems/${id}`, gem).then(r => r.data),
+  delete: (id) => api.delete(`/admin/hidden-gems/${id}`).then(r => r.data)
+}
