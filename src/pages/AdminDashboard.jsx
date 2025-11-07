@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { adminToursAPI, adminTourBookingsAPI, adminVehicleAPI, adminVehicleBookingsAPI, adminHiddenGemsAPI } from '../services/api'
+import { adminToursAPI, adminTourBookingsAPI, adminVehicleAPI, adminVehicleBookingsAPI, adminHiddenGemsAPI, adminVendorsAPI } from '../services/api'
 
 const Section = ({ title, children }) => (
   <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -37,6 +37,11 @@ const AdminDashboard = () => {
   const [loadingLists, setLoadingLists] = useState(true)
   const [error, setError] = useState(null)
 
+  // Vendor approvals
+  const [pendingVendors, setPendingVendors] = useState([])
+  const [loadingApprovals, setLoadingApprovals] = useState(true)
+  const [approvalsError, setApprovalsError] = useState(null)
+
   const loadLists = async () => {
     try {
       setLoadingLists(true)
@@ -54,7 +59,31 @@ const AdminDashboard = () => {
     }
   }
 
-  useEffect(() => { loadLists() }, [])
+  const loadApprovals = async () => {
+    try {
+      setLoadingApprovals(true)
+      const list = await adminVendorsAPI.listRegistrationRequests('PENDING')
+      setPendingVendors(list || [])
+    } catch (e) {
+      console.error(e)
+      setApprovalsError('Failed to load vendor approvals')
+    } finally {
+      setLoadingApprovals(false)
+    }
+  }
+
+  useEffect(() => { loadLists(); loadApprovals() }, [])
+
+  const approveVendor = async (id) => {
+    await adminVendorsAPI.approve(id)
+    loadApprovals()
+  }
+
+  const rejectVendor = async (id) => {
+    const reason = window.prompt('Optional rejection reason:')
+    await adminVendorsAPI.reject(id, reason)
+    loadApprovals()
+  }
 
   const handleCreateTour = async (e) => {
     e.preventDefault()
@@ -127,6 +156,48 @@ const AdminDashboard = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+
+      {/* Awaiting Vendor Approvals */}
+      <Section title="Awaiting Vendor Approvals">
+        {loadingApprovals ? (
+          <div className="text-gray-600">Loading...</div>
+        ) : approvalsError ? (
+          <div className="text-red-600">{approvalsError}</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left text-gray-700">
+                  <th className="py-2 pr-4">Username</th>
+                  <th className="py-2 pr-4">Company</th>
+                  <th className="py-2 pr-4">Department</th>
+                  <th className="py-2 pr-4">Email</th>
+                  <th className="py-2 pr-4">Phone</th>
+                  <th className="py-2 pr-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingVendors.length === 0 && (
+                  <tr><td className="py-3 text-gray-500" colSpan={6}>No pending vendor requests</td></tr>
+                )}
+                {pendingVendors.map(v => (
+                  <tr key={v.id} className="border-t border-gray-100">
+                    <td className="py-2 pr-4">{v.username || '-'}</td>
+                    <td className="py-2 pr-4">{v.companyName || v.name}</td>
+                    <td className="py-2 pr-4">{v.department || '-'}</td>
+                    <td className="py-2 pr-4">{v.email}</td>
+                    <td className="py-2 pr-4">{v.contactPhone || '-'}</td>
+                    <td className="py-2 pr-4 space-x-2">
+                      <button onClick={() => approveVendor(v.id)} className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700">Approve</button>
+                      <button onClick={() => rejectVendor(v.id)} className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700">Reject</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
 
       {/* Create forms */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

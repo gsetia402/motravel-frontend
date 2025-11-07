@@ -82,6 +82,8 @@ export const vehicleAPI = {
   }
 }
 
+// (moved vendorSignup into authAPI below)
+
 // Booking API functions
 export const bookingAPI = {
   checkAvailability: async (vehicleId, startTime, endTime) => {
@@ -127,6 +129,12 @@ export const authAPI = {
       console.error('Error signing up:', error)
       throw error
     }
+  },
+
+  vendorSignup: async ({ username, email, password, companyName, contactPhone, department }) => {
+    const payload = { username, email, password, companyName, contactPhone, department }
+    const response = await api.post('/auth/vendor-signup', payload)
+    return response.data
   }
 }
 
@@ -298,4 +306,32 @@ export const adminHiddenGemsAPI = {
   create: (gem) => api.post('/admin/hidden-gems', gem).then(r => r.data),
   update: (id, gem) => api.put(`/admin/hidden-gems/${id}`, gem).then(r => r.data),
   delete: (id) => api.delete(`/admin/hidden-gems/${id}`).then(r => r.data)
+}
+
+// Admin Vendors (approvals) API
+export const adminVendorsAPI = {
+  listRegistrationRequests: (status = 'PENDING') => api.get('/admin/vendors/registration-requests', { params: { status } }).then(r => r.data),
+  approve: (id) => api.post(`/admin/vendors/${id}/approve`).then(r => r.data),
+  reject: (id, reason) => api.post(`/admin/vendors/${id}/reject`, reason ? { reason } : {}).then(r => r.data)
+}
+
+// Vendor Dashboard API
+export const vendorDashboardAPI = {
+  summary: () => api.get('/vendor/dashboard/summary').then(r => r.data),
+  bookings: () => api.get('/vendor/dashboard/bookings').then(r => r.data)
+}
+
+// Vendor assets APIs
+export const vendorToursAPI = {
+  list: () => api.get('/vendor/tours').then(r => r.data),
+  create: (tour) => api.post('/vendor/tours', tour).then(r => r.data),
+  update: (id, tour) => api.put(`/vendor/tours/${id}`, tour).then(r => r.data),
+  remove: (id) => api.delete(`/vendor/tours/${id}`).then(r => r.data)
+}
+
+export const vendorVehiclesAPI = {
+  list: () => api.get('/vendor/vehicles').then(r => r.data),
+  create: (vehicle) => api.post('/vendor/vehicles', vehicle).then(r => r.data),
+  update: (id, vehicle) => api.put(`/vendor/vehicles/${id}`, vehicle).then(r => r.data),
+  remove: (id) => api.delete(`/vendor/vehicles/${id}`).then(r => r.data)
 }

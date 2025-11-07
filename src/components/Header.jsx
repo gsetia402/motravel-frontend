@@ -10,6 +10,7 @@ const LogoutIcon = ({ className }) => <span className={`${className} text-sm`}>�
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const isAdmin = !!user?.roles?.includes('ROLE_ADMIN');
+  const isVendor = !!user?.roles?.includes('ROLE_VENDOR');
   const navigate = useNavigate();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -148,6 +149,16 @@ const Header = () => {
                         Admin Dashboard
                       </Link>
                     )}
+                    {isVendor && (
+                      <Link
+                        to="/vendor"
+                        className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <span className="mr-3">🏷️</span>
+                        Vendor Dashboard
+                      </Link>
+                    )}
                     <Link
                       to="/profile"
                       className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -204,6 +215,12 @@ const Header = () => {
                   className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
                   Sign Up
+                </Link>
+                <Link
+                  to="/vendor-signup"
+                  className="px-4 py-2 text-blue-700 border border-blue-200 bg-blue-50 font-medium rounded-full hover:bg-blue-100 transition-colors duration-200"
+                >
+                  Vendor Sign Up
                 </Link>
               </div>
             )}

@@ -12,6 +12,8 @@ import SignupForm from './components/auth/SignupForm'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import AdminRoute from './components/auth/AdminRoute'
 import AdminDashboard from './pages/AdminDashboard'
+import VendorDashboard from './pages/VendorDashboard'
+import VendorSignup from './pages/VendorSignup'
 
 // Import user pages
 import UserProfile from './pages/UserProfile'
@@ -82,6 +84,7 @@ function App() {
                 <Route path="/tours/:id" element={<TourDetail />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/signup" element={<SignupForm />} />
+                <Route path="/vendor-signup" element={<VendorSignup />} />
                 
                 {/* Protected Routes */}
                 <Route path="/profile" element={
@@ -108,6 +111,11 @@ function App() {
                   <AdminRoute>
                     <AdminDashboard />
                   </AdminRoute>
+                } />
+                <Route path="/vendor" element={
+                  <ProtectedRoute>
+                    <VendorDashboard />
+                  </ProtectedRoute>
                 } />
               </Routes>
             </main>
